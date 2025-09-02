@@ -205,7 +205,7 @@
                 const savedPasantias = localStorage.getItem('pasantiasData');
                 const savedUserInfo = localStorage.getItem('pasantiasUserInfo');
                 if (savedPasantias) {
-                    pasantias = JSON.parse(savedPasantias);
+                    pasantias = JSON.parse(savedPantasias);
                 }
                 if(savedUserInfo) {
                     const info = JSON.parse(savedUserInfo);
@@ -321,19 +321,16 @@
                         const sheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[sheetName];
                         
-                        // Convertir a JSON, ignorando el encabezado del informe y las filas de resumen
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 10 });
 
-                        // Extraer información del usuario del encabezado
                         document.getElementById('pasante').value = worksheet['C4'] ? worksheet['C4'].v : '';
                         document.getElementById('docente').value = worksheet['C5'] ? worksheet['C5'].v : '';
                         document.getElementById('carrera').value = worksheet['C6'] ? worksheet['C6'].v : '';
                         document.getElementById('semestre').value = worksheet['C7'] ? worksheet['C7'].v : '';
 
                         const importedPasantias = jsonData
-                            .filter(row => row.length >= 6 && row[0] !== 'Fecha') // Asegurarse que es una fila de datos
+                            .filter(row => row.length >= 6 && row[0] !== 'Fecha')
                             .map(row => {
-                                // XLSX puede leer fechas como números seriales de Excel
                                 const fechaExcel = typeof row[0] === 'number' ? new Date(Math.round((row[0] - 25569) * 86400 * 1000)).toISOString().split('T')[0] : row[0];
                                 
                                 const formatTime = (timeValue) => {
@@ -363,7 +360,7 @@
                         console.error("Error al importar el archivo:", error);
                         alert("Hubo un error al procesar el archivo. Asegúrate de que es un informe válido generado por esta aplicación.");
                     } finally {
-                        fileInput.value = ''; // Limpiar el input para permitir subir el mismo archivo de nuevo
+                        fileInput.value = '';
                     }
                 };
                 reader.readAsArrayBuffer(file);
@@ -375,12 +372,10 @@
                     return;
                 }
                 
-                // Actualizar y guardar la info del usuario antes de descargar
                 saveData();
 
                 const wb = XLSX.utils.book_new();
                 
-                // --- Preparación de datos ---
                 pasantias.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
                 const info = JSON.parse(localStorage.getItem('pasantiasUserInfo'));
                 const hoy = new Date().toLocaleDateString('es-ES');
@@ -390,7 +385,6 @@
                 const totalDiasNum = pasantias.length;
                 const totalHorasNum = pasantias.reduce((acc, p) => acc + calculateHours(p.horaEntrada, p.horaSalida), 0);
                 
-                // --- Creación de la Hoja de Cálculo ---
                 const headerData = [
                     ["INFORME DE PASANTÍAS"],
                     [],
@@ -433,14 +427,13 @@
 
                 const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-                // --- Estilos y Formato ---
                 ws['!merges'] = [
-                    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Título principal
-                    { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } }, // Título "Datos del Pasante"
-                    { s: { r: 3, c: 2 }, e: { r: 3, c: 5 } }, // Nombre pasante valor
-                    { s: { r: 4, c: 2 }, e: { r: 4, c: 5 } }, // Nombre docente valor
-                    { s: { r: 5, c: 2 }, e: { r: 5, c: 5 } }, // Carrera valor
-                    { s: { r: 6, c: 2 }, e: { r: 6, c: 5 } }, // Semestre valor
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+                    { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
+                    { s: { r: 3, c: 2 }, e: { r: 3, c: 5 } },
+                    { s: { r: 4, c: 2 }, e: { r: 4, c: 5 } },
+                    { s: { r: 5, c: 2 }, e: { r: 5, c: 5 } },
+                    { s: { r: 6, c: 2 }, e: { r: 6, c: 5 } },
                 ];
                 
                 ws['!cols'] = [
@@ -448,39 +441,45 @@
                     { wch: 20 }, { wch: 50 }, { wch: 15 }
                 ];
                 
-                // Estilos (s: style, a: alignment, f: font, b: border)
                 const headerStyle = { font: { bold: true, sz: 16, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FF4F46E5" } }, alignment: { horizontal: "center", vertical: "center" } };
                 const subHeaderStyle = { font: { bold: true, sz: 12 }, fill: { fgColor: { rgb: "FF374151" } } };
                 const tableHeaderStyle = { font: { bold: true, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FF6366F1" } }, alignment: { horizontal: "center" }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
                 const cellStyle = { border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
                 const summaryLabelStyle = { font: { bold: true }, alignment: { horizontal: "right" } };
 
-                ws['A1'].s = headerStyle;
-                ws['A3'].s = subHeaderStyle;
+                // FIX: Ensure cell objects exist before applying styles
+                const applyStyle = (cellRef, style) => {
+                    if (!ws[cellRef]) ws[cellRef] = {};
+                    ws[cellRef].s = style;
+                };
+                
+                const applyFormat = (cellRef, format) => {
+                    if (!ws[cellRef]) ws[cellRef] = {};
+                    ws[cellRef].z = format;
+                };
 
-                for (let i = 0; i < tableHeader.length; i++) {
-                    const cellRef = XLSX.utils.encode_cell({c: i, r: 10});
-                    ws[cellRef].s = tableHeaderStyle;
-                }
+                applyStyle('A1', headerStyle);
+                applyStyle('A3', subHeaderStyle);
+                
+                tableHeader.forEach((_, i) => {
+                    applyStyle(XLSX.utils.encode_cell({c: i, r: 10}), tableHeaderStyle);
+                });
 
                 tableBody.forEach((row, r_idx) => {
-                    row.forEach((cell, c_idx) => {
+                    row.forEach((_, c_idx) => {
                         const cellRef = XLSX.utils.encode_cell({ c: c_idx, r: 11 + r_idx });
-                        if(!ws[cellRef]) ws[cellRef] = {};
-                        ws[cellRef].s = cellStyle;
-
-                        if (c_idx === 0) ws[cellRef].z = 'dd/mm/yyyy'; // Formato fecha
-                        if (c_idx === 1 || c_idx === 2) ws[cellRef].z = 'hh:mm'; // Formato hora
-                        if (c_idx === 5) ws[cellRef].z = '0.00'; // Formato número
+                        applyStyle(cellRef, cellStyle);
+                        if (c_idx === 0) applyFormat(cellRef, 'dd/mm/yyyy');
+                        if (c_idx === 1 || c_idx === 2) applyFormat(cellRef, 'hh:mm');
+                        if (c_idx === 5) applyFormat(cellRef, '0.00');
                     });
                 });
                 
                 const summaryRow1 = 11 + tableBody.length + 2;
                 const summaryRow2 = summaryRow1 + 1;
-                ws[XLSX.utils.encode_cell({c:4, r:summaryRow1})].s = summaryLabelStyle;
-                ws[XLSX.utils.encode_cell({c:4, r:summaryRow2})].s = summaryLabelStyle;
-                ws[XLSX.utils.encode_cell({c:5, r:summaryRow2})].z = '0.00';
-
+                applyStyle(XLSX.utils.encode_cell({c:4, r:summaryRow1}), summaryLabelStyle);
+                applyStyle(XLSX.utils.encode_cell({c:4, r:summaryRow2}), summaryLabelStyle);
+                applyFormat(XLSX.utils.encode_cell({c:5, r:summaryRow2}), '0.00');
 
                 XLSX.utils.book_append_sheet(wb, ws, "Informe de Pasantías");
                 XLSX.writeFile(wb, `Informe_Pasantias_${info.pasante.replace(/\s/g, '_')}_${hoy}.xlsx`);
@@ -517,3 +516,4 @@
 
 </body>
 </html>
+
