@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Pasantías</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+        [type='time']::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white antialiased">
+
+    <div id="app" class="min-h-screen transition-opacity duration-500">
+        
+        <!-- Pantalla de Bienvenida -->
+        <div id="welcomeScreen" class="flex flex-col items-center justify-center min-h-screen p-4 text-center">
+            <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-slate-700 max-w-lg w-full">
+                <div class="mb-6">
+                    <i data-lucide="clipboard-list" class="w-16 h-16 mx-auto text-indigo-400"></i>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Registro de Pasantías</h1>
+                <p class="text-slate-400 mb-8 max-w-md mx-auto">Gestiona tus horas de pasantía de forma fácil y genera informes profesionales en segundos.</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="newReportBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
+                        <i data-lucide="file-plus-2"></i> Crear Nuevo Informe
+                    </button>
+                    <button onclick="document.getElementById('fileInput').click();" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
+                        <i data-lucide="upload"></i> Importar Informe
+                    </button>
+                    <input type="file" id="fileInput" class="hidden" accept=".xlsx">
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla del Editor -->
+        <div id="editorScreen" class="hidden p-4 md:p-8 max-w-7xl mx-auto">
+            <header class="flex items-center justify-between mb-8">
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 flex items-center gap-3">
+                    <i data-lucide="edit-3"></i> Editor de Pasantías
+                </h1>
+                <button id="backToHomeBtn" class="bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                    <i data-lucide="arrow-left"></i> Volver al Inicio
+                </button>
+            </header>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Columna de Formulario e Información -->
+                <div class="lg:col-span-1 flex flex-col gap-8">
+                    <!-- Formulario para agregar pasantía -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="plus-circle" class="text-indigo-400"></i>Añadir Nueva Entrada</h2>
+                        <form id="pasantiaForm" class="space-y-4">
+                            <div>
+                                <label for="fecha" class="block text-sm font-medium text-slate-300 mb-1">Fecha</label>
+                                <input type="date" id="fecha" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="horaEntrada" class="block text-sm font-medium text-slate-300 mb-1">Hora de Entrada</label>
+                                    <input type="time" id="horaEntrada" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label for="horaSalida" class="block text-sm font-medium text-slate-300 mb-1">Hora de Salida</label>
+                                    <input type="time" id="horaSalida" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+                             <div>
+                                <label for="lugar" class="block text-sm font-medium text-slate-300 mb-1">Lugar</label>
+                                <select id="lugar" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="Tupuraya">Tupuraya</option>
+                                    <option value="Arocagua">Arocagua</option>
+                                    <option value="Ambos">Ambos (Tupuraya y Arocagua)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="descripcion" class="block text-sm font-medium text-slate-300 mb-1">Descripción de Actividades</label>
+                                <textarea id="descripcion" rows="3" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: Mantenimiento de equipos..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
+                                <i data-lucide="save"></i> Guardar Pasantía
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Información del Informe -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="user-square" class="text-indigo-400"></i>Datos del Informe</h2>
+                        <form id="infoForm" class="space-y-4">
+                            <input type="text" id="pasante" placeholder="Nombre del Pasante" value="Juan Jose Lizarazu Quiroga" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="docente" placeholder="Nombre del Docente" value="Ing. Dorian Fuentes" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="carrera" placeholder="Carrera" value="Informática Industrial" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="semestre" placeholder="Semestre" value="IV semestre" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </form>
+                    </div>
+
+                </div>
+
+                <!-- Columna de Registros -->
+                <div class="lg:col-span-2 bg-slate-800 p-6 rounded-2xl border border-slate-700 flex flex-col">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="list-checks" class="text-indigo-400"></i>Mis Pasantías Registradas</h2>
+                    <div id="pasantiasListContainer" class="flex-grow overflow-y-auto custom-scrollbar pr-2 min-h-[300px] max-h-[50vh] lg:max-h-[calc(100vh-300px)]">
+                        <!-- Las entradas de la pasantía se insertarán aquí -->
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-slate-700">
+                        <div class="flex justify-between items-center text-lg font-bold mb-6">
+                           <div id="summary" class="flex gap-6">
+                               <span>Total Días: <span id="totalDias" class="text-indigo-400">0</span></span>
+                               <span>Total Horas: <span id="totalHoras" class="text-indigo-400">0.00</span></span>
+                           </div>
+                           <button id="downloadReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
+                               <i data-lucide="download"></i> Descargar Informe
+                           </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar Lucide Icons
+            lucide.createIcons();
+
+            // Elementos del DOM
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const editorScreen = document.getElementById('editorScreen');
+            const newReportBtn = document.getElementById('newReportBtn');
+            const backToHomeBtn = document.getElementById('backToHomeBtn');
+            const pasantiaForm = document.getElementById('pasantiaForm');
+            const pasantiasListContainer = document.getElementById('pasantiasListContainer');
+            const totalDias = document.getElementById('totalDias');
+            const totalHoras = document.getElementById('totalHoras');
+            const fileInput = document.getElementById('fileInput');
+            const downloadReportBtn = document.getElementById('downloadReportBtn');
+            const infoForm = document.getElementById('infoForm');
+
+            // Estado de la aplicación
+            let pasantias = [];
+            let userInfo = {};
+
+            // --- Funciones de Navegación y UI ---
+
+            const showEditor = () => {
+                welcomeScreen.classList.add('opacity-0');
+                setTimeout(() => {
+                    welcomeScreen.classList.add('hidden');
+                    editorScreen.classList.remove('hidden');
+                    editorScreen.classList.remove('opacity-0');
+                    lucide.createIcons();
+                }, 300);
+            };
+
+            const showWelcome = () => {
+                editorScreen.classList.add('opacity-0');
+                setTimeout(() => {
+                    editorScreen.classList.add('hidden');
+                    welcomeScreen.classList.remove('hidden');
+                    welcomeScreen.classList.remove('opacity-0');
+                     lucide.createIcons();
+                }, 300);
+            };
+
+            // --- Funciones de Lógica de Datos ---
+
+            const saveData = () => {
+                const infoData = {
+                    pasante: document.getElementById('pasante').value,
+                    docente: document.getElementById('docente').value,
+                    carrera: document.getElementById('carrera').value,
+                    semestre: document.getElementById('semestre').value
+                };
+                localStorage.setItem('pasantiasData', JSON.stringify(pasantias));
+                localStorage.setItem('pasantiasUserInfo', JSON.stringify(infoData));
+            };
+
+            const loadData = () => {
+                const savedPasantias = localStorage.getItem('pasantiasData');
+                const savedUserInfo = localStorage.getItem('pasantiasUserInfo');
+                if (savedPasantias) {
+                    pasantias = JSON.parse(savedPasantias);
+                }
+                if(savedUserInfo) {
+                    const info = JSON.parse(savedUserInfo);
+                    document.getElementById('pasante').value = info.pasante || 'Juan Jose Lizarazu Quiroga';
+                    document.getElementById('docente').value = info.docente || 'Ing. Dorian Fuentes';
+                    document.getElementById('carrera').value = info.carrera || 'Informática Industrial';
+                    document.getElementById('semestre').value = info.semestre || 'IV semestre';
+                }
+            };
+
+            const calculateHours = (start, end) => {
+                const startTime = new Date(`1970-01-01T${start}:00`);
+                const endTime = new Date(`1970-01-01T${end}:00`);
+                if (endTime < startTime) { // Maneja el caso de pasar la medianoche
+                    endTime.setDate(endTime.getDate() + 1);
+                }
+                const diff = endTime - startTime;
+                return diff / (1000 * 60 * 60);
+            };
+
+            const renderPasantias = () => {
+                pasantias.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Ordenar por fecha
+                pasantiasListContainer.innerHTML = '';
+                if (pasantias.length === 0) {
+                    pasantiasListContainer.innerHTML = `<div class="text-center text-slate-400 py-10">
+                        <i data-lucide="folder-search" class="w-16 h-16 mx-auto mb-4"></i>
+                        <p>Aún no has registrado ninguna pasantía.</p>
+                        <p>Usa el formulario de la izquierda para empezar.</p>
+                    </div>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                pasantias.forEach((pasantia, index) => {
+                    const horas = calculateHours(pasantia.horaEntrada, pasantia.horaSalida);
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-700/50 p-4 rounded-lg mb-3 flex items-start justify-between gap-4';
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                                <span class="font-bold text-lg text-indigo-300">${new Date(pasantia.fecha + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                <span class="text-sm bg-slate-600 px-2 py-1 rounded-full">${pasantia.lugar}</span>
+                            </div>
+                            <p class="text-slate-300 text-sm mb-2">${pasantia.descripcion}</p>
+                            <div class="flex items-center gap-4 text-xs text-slate-400">
+                                <span><i data-lucide="log-in" class="w-3 h-3 inline-block mr-1"></i>${pasantia.horaEntrada}</span>
+                                <span><i data-lucide="log-out" class="w-3 h-3 inline-block mr-1"></i>${pasantia.horaSalida}</span>
+                                <span class="font-semibold text-indigo-400"><i data-lucide="clock" class="w-3 h-3 inline-block mr-1"></i>${horas.toFixed(2)} horas</span>
+                            </div>
+                        </div>
+                        <button class="delete-btn text-slate-500 hover:text-red-400 transition-colors" data-index="${index}">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    `;
+                    pasantiasListContainer.appendChild(card);
+                });
+                lucide.createIcons();
+                updateSummary();
+            };
+
+            const updateSummary = () => {
+                totalDias.textContent = pasantias.length;
+                const total = pasantias.reduce((acc, curr) => {
+                    return acc + calculateHours(curr.horaEntrada, curr.horaSalida);
+                }, 0);
+                totalHoras.textContent = total.toFixed(2);
+            };
+
+            const addPasantia = (e) => {
+                e.preventDefault();
+                const newPasantia = {
+                    fecha: document.getElementById('fecha').value,
+                    horaEntrada: document.getElementById('horaEntrada').value,
+                    horaSalida: document.getElementById('horaSalida').value,
+                    lugar: document.getElementById('lugar').value,
+                    descripcion: document.getElementById('descripcion').value,
+                };
+                
+                const hours = calculateHours(newPasantia.horaEntrada, newPasantia.horaSalida);
+                if (hours <= 0) {
+                    alert('La hora de salida debe ser posterior a la hora de entrada.');
+                    return;
+                }
+
+                pasantias.push(newPasantia);
+                saveData();
+                renderPasantias();
+                pasantiaForm.reset();
+            };
+
+            const deletePasantia = (e) => {
+                if (e.target.closest('.delete-btn')) {
+                    const index = e.target.closest('.delete-btn').dataset.index;
+                    if (confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
+                        pasantias.splice(index, 1);
+                        saveData();
+                        renderPasantias();
+                    }
+                }
+            };
+            
+            // --- Funciones de Excel (Importar/Exportar) ---
+
+            const handleFileUpload = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        
+                        // Convertir a JSON, ignorando el encabezado del informe y las filas de resumen
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 10 });
+
+                        // Extraer información del usuario del encabezado
+                        document.getElementById('pasante').value = worksheet['C4'] ? worksheet['C4'].v : '';
+                        document.getElementById('docente').value = worksheet['C5'] ? worksheet['C5'].v : '';
+                        document.getElementById('carrera').value = worksheet['C6'] ? worksheet['C6'].v : '';
+                        document.getElementById('semestre').value = worksheet['C7'] ? worksheet['C7'].v : '';
+
+                        const importedPasantias = jsonData
+                            .filter(row => row.length >= 6 && row[0] !== 'Fecha') // Asegurarse que es una fila de datos
+                            .map(row => {
+                                // XLSX puede leer fechas como números seriales de Excel
+                                const fechaExcel = typeof row[0] === 'number' ? new Date(Math.round((row[0] - 25569) * 86400 * 1000)).toISOString().split('T')[0] : row[0];
+                                
+                                const formatTime = (timeValue) => {
+                                    if (typeof timeValue === 'number') {
+                                        const totalSeconds = Math.round(timeValue * 86400);
+                                        const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+                                        const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+                                        return `${hours}:${minutes}`;
+                                    }
+                                    return timeValue;
+                                };
+
+                                return {
+                                    fecha: fechaExcel,
+                                    horaEntrada: formatTime(row[1]),
+                                    horaSalida: formatTime(row[2]),
+                                    lugar: row[3],
+                                    descripcion: row[4],
+                                };
+                            });
+                        
+                        pasantias = importedPasantias;
+                        saveData();
+                        renderPasantias();
+                        showEditor();
+                    } catch (error) {
+                        console.error("Error al importar el archivo:", error);
+                        alert("Hubo un error al procesar el archivo. Asegúrate de que es un informe válido generado por esta aplicación.");
+                    } finally {
+                        fileInput.value = ''; // Limpiar el input para permitir subir el mismo archivo de nuevo
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            };
+
+            const downloadReport = () => {
+                if (pasantias.length === 0) {
+                    alert('No hay pasantías registradas para generar un informe.');
+                    return;
+                }
+                
+                // Actualizar y guardar la info del usuario antes de descargar
+                saveData();
+
+                const wb = XLSX.utils.book_new();
+                
+                // --- Preparación de datos ---
+                pasantias.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                const info = JSON.parse(localStorage.getItem('pasantiasUserInfo'));
+                const hoy = new Date().toLocaleDateString('es-ES');
+                const fechaInicio = new Date(pasantias[0].fecha + 'T00:00:00').toLocaleDateString('es-ES');
+                const fechaFin = new Date(pasantias[pasantias.length - 1].fecha + 'T00:00:00').toLocaleDateString('es-ES');
+                
+                const totalDiasNum = pasantias.length;
+                const totalHorasNum = pasantias.reduce((acc, p) => acc + calculateHours(p.horaEntrada, p.horaSalida), 0);
+                
+                // --- Creación de la Hoja de Cálculo ---
+                const headerData = [
+                    ["INFORME DE PASANTÍAS"],
+                    [],
+                    ["Datos del Pasante"],
+                    ["Nombre:", "", info.pasante],
+                    ["Docente:", "", info.docente],
+                    ["Carrera:", "", info.carrera],
+                    ["Semestre:", "", info.semestre],
+                    [],
+                    ["Periodo:", `${fechaInicio} - ${fechaFin}`, "", "Fecha de Emisión:", hoy],
+                ];
+
+                const tableHeader = ["Fecha", "Hora Entrada", "Hora Salida", "Lugar", "Descripción", "Horas del Día"];
+                
+                const tableBody = pasantias.map(p => {
+                    const horasDia = calculateHours(p.horaEntrada, p.horaSalida);
+                    return [
+                        new Date(p.fecha + 'T00:00:00'),
+                        p.horaEntrada,
+                        p.horaSalida,
+                        p.lugar,
+                        p.descripcion,
+                        horasDia
+                    ];
+                });
+
+                const summaryData = [
+                    [],
+                    ["", "", "", "", "TOTAL DÍAS:", totalDiasNum],
+                    ["", "", "", "", "TOTAL HORAS:", totalHorasNum]
+                ];
+
+                const ws_data = [
+                    ...headerData,
+                    [],
+                    tableHeader,
+                    ...tableBody,
+                    ...summaryData
+                ];
+
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+                // --- Estilos y Formato ---
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Título principal
+                    { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } }, // Título "Datos del Pasante"
+                    { s: { r: 3, c: 2 }, e: { r: 3, c: 5 } }, // Nombre pasante valor
+                    { s: { r: 4, c: 2 }, e: { r: 4, c: 5 } }, // Nombre docente valor
+                    { s: { r: 5, c: 2 }, e: { r: 5, c: 5 } }, // Carrera valor
+                    { s: { r: 6, c: 2 }, e: { r: 6, c: 5 } }, // Semestre valor
+                ];
+                
+                ws['!cols'] = [
+                    { wch: 15 }, { wch: 15 }, { wch: 15 },
+                    { wch: 20 }, { wch: 50 }, { wch: 15 }
+                ];
+                
+                // Estilos (s: style, a: alignment, f: font, b: border)
+                const headerStyle = { font: { bold: true, sz: 16, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FF4F46E5" } }, alignment: { horizontal: "center", vertical: "center" } };
+                const subHeaderStyle = { font: { bold: true, sz: 12 }, fill: { fgColor: { rgb: "FF374151" } } };
+                const tableHeaderStyle = { font: { bold: true, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FF6366F1" } }, alignment: { horizontal: "center" }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
+                const cellStyle = { border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
+                const summaryLabelStyle = { font: { bold: true }, alignment: { horizontal: "right" } };
+
+                ws['A1'].s = headerStyle;
+                ws['A3'].s = subHeaderStyle;
+
+                for (let i = 0; i < tableHeader.length; i++) {
+                    const cellRef = XLSX.utils.encode_cell({c: i, r: 10});
+                    ws[cellRef].s = tableHeaderStyle;
+                }
+
+                tableBody.forEach((row, r_idx) => {
+                    row.forEach((cell, c_idx) => {
+                        const cellRef = XLSX.utils.encode_cell({ c: c_idx, r: 11 + r_idx });
+                        if(!ws[cellRef]) ws[cellRef] = {};
+                        ws[cellRef].s = cellStyle;
+
+                        if (c_idx === 0) ws[cellRef].z = 'dd/mm/yyyy'; // Formato fecha
+                        if (c_idx === 1 || c_idx === 2) ws[cellRef].z = 'hh:mm'; // Formato hora
+                        if (c_idx === 5) ws[cellRef].z = '0.00'; // Formato número
+                    });
+                });
+                
+                const summaryRow1 = 11 + tableBody.length + 2;
+                const summaryRow2 = summaryRow1 + 1;
+                ws[XLSX.utils.encode_cell({c:4, r:summaryRow1})].s = summaryLabelStyle;
+                ws[XLSX.utils.encode_cell({c:4, r:summaryRow2})].s = summaryLabelStyle;
+                ws[XLSX.utils.encode_cell({c:5, r:summaryRow2})].z = '0.00';
+
+
+                XLSX.utils.book_append_sheet(wb, ws, "Informe de Pasantías");
+                XLSX.writeFile(wb, `Informe_Pasantias_${info.pasante.replace(/\s/g, '_')}_${hoy}.xlsx`);
+            };
+
+            // --- Event Listeners ---
+            newReportBtn.addEventListener('click', () => {
+                pasantias = [];
+                localStorage.removeItem('pasantiasData');
+                renderPasantias();
+                showEditor();
+            });
+
+            backToHomeBtn.addEventListener('click', () => {
+                 if (confirm('¿Estás seguro de que quieres volver al inicio? Se borrarán los datos no guardados.')) {
+                    pasantias = [];
+                    localStorage.clear();
+                    showWelcome();
+                    pasantiaForm.reset();
+                    infoForm.reset();
+                 }
+            });
+
+            pasantiaForm.addEventListener('submit', addPasantia);
+            pasantiasListContainer.addEventListener('click', deletePasantia);
+            fileInput.addEventListener('change', handleFileUpload);
+            downloadReportBtn.addEventListener('click', downloadReport);
+
+            // Carga inicial
+            loadData();
+            renderPasantias();
+        });
+    </script>
+
+</body>
+</html>
