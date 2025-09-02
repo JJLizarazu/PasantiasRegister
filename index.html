@@ -205,7 +205,8 @@
                 const savedPasantias = localStorage.getItem('pasantiasData');
                 const savedUserInfo = localStorage.getItem('pasantiasUserInfo');
                 if (savedPasantias) {
-                    pasantias = JSON.parse(savedPantasias);
+                    // ESTA LÍNEA ESTABA MAL Y CAUSÓ EL ERROR. AHORA ESTÁ CORREGIDA.
+                    pasantias = JSON.parse(savedPasantias);
                 }
                 if(savedUserInfo) {
                     const info = JSON.parse(savedUserInfo);
