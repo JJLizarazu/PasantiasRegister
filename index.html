@@ -36,7 +36,7 @@
 
     <div id="app" class="min-h-screen transition-opacity duration-500">
         
-        <!-- Pantalla de Bienvenida -->
+        <!-- Welcome Screen -->
         <div id="welcomeScreen" class="flex flex-col items-center justify-center min-h-screen p-4 text-center">
             <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-slate-700 max-w-lg w-full">
                 <div class="mb-6">
@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <!-- Pantalla del Editor -->
+        <!-- Editor Screen -->
         <div id="editorScreen" class="hidden p-4 md:p-8 max-w-7xl mx-auto">
             <header class="flex items-center justify-between mb-8">
                 <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 flex items-center gap-3">
@@ -69,9 +69,9 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                <!-- Columna de Formulario e Información -->
+                <!-- Form & Info Column -->
                 <div class="lg:col-span-1 flex flex-col gap-8">
-                    <!-- Formulario para agregar pasantía -->
+                    <!-- Add Entry Form -->
                     <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="plus-circle" class="text-indigo-400"></i>Añadir Nueva Entrada</h2>
                         <form id="pasantiaForm" class="space-y-4">
@@ -94,7 +94,7 @@
                                 <select id="lugar" required class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <option value="Tupuraya">Tupuraya</option>
                                     <option value="Arocagua">Arocagua</option>
-                                    <option value="Ambos">Ambos (Tupuraya y Arocagua)</option>
+                                    <option value="Ambos">Ambos</option>
                                 </select>
                             </div>
                             <div>
@@ -107,7 +107,7 @@
                         </form>
                     </div>
 
-                    <!-- Información del Informe -->
+                    <!-- Report Info -->
                     <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="user-square" class="text-indigo-400"></i>Datos del Informe</h2>
                         <form id="infoForm" class="space-y-4">
@@ -120,11 +120,11 @@
 
                 </div>
 
-                <!-- Columna de Registros -->
+                <!-- Records Column -->
                 <div class="lg:col-span-2 bg-slate-800 p-6 rounded-2xl border border-slate-700 flex flex-col">
                     <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="list-checks" class="text-indigo-400"></i>Mis Pasantías Registradas</h2>
                     <div id="pasantiasListContainer" class="flex-grow overflow-y-auto custom-scrollbar pr-2 min-h-[300px] max-h-[50vh] lg:max-h-[calc(100vh-300px)]">
-                        <!-- Las entradas de la pasantía se insertarán aquí -->
+                        <!-- Entries will be inserted here -->
                     </div>
                     <div class="mt-6 pt-6 border-t border-slate-700">
                         <div class="flex justify-between items-center text-lg font-bold mb-6">
@@ -146,10 +146,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Inicializar Lucide Icons
             lucide.createIcons();
 
-            // Elementos del DOM
             const welcomeScreen = document.getElementById('welcomeScreen');
             const editorScreen = document.getElementById('editorScreen');
             const newReportBtn = document.getElementById('newReportBtn');
@@ -162,33 +160,17 @@
             const downloadReportBtn = document.getElementById('downloadReportBtn');
             const infoForm = document.getElementById('infoForm');
 
-            // Estado de la aplicación
             let pasantias = [];
-            let userInfo = {};
-
-            // --- Funciones de Navegación y UI ---
 
             const showEditor = () => {
-                welcomeScreen.classList.add('opacity-0');
-                setTimeout(() => {
-                    welcomeScreen.classList.add('hidden');
-                    editorScreen.classList.remove('hidden');
-                    editorScreen.classList.remove('opacity-0');
-                    lucide.createIcons();
-                }, 300);
+                welcomeScreen.classList.add('hidden');
+                editorScreen.classList.remove('hidden');
             };
 
             const showWelcome = () => {
-                editorScreen.classList.add('opacity-0');
-                setTimeout(() => {
-                    editorScreen.classList.add('hidden');
-                    welcomeScreen.classList.remove('hidden');
-                    welcomeScreen.classList.remove('opacity-0');
-                     lucide.createIcons();
-                }, 300);
+                editorScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
             };
-
-            // --- Funciones de Lógica de Datos ---
 
             const saveData = () => {
                 const infoData = {
@@ -205,7 +187,6 @@
                 const savedPasantias = localStorage.getItem('pasantiasData');
                 const savedUserInfo = localStorage.getItem('pasantiasUserInfo');
                 if (savedPasantias) {
-                    // ESTA LÍNEA ESTABA MAL Y CAUSÓ EL ERROR. AHORA ESTÁ CORREGIDA.
                     pasantias = JSON.parse(savedPasantias);
                 }
                 if(savedUserInfo) {
@@ -220,26 +201,20 @@
             const calculateHours = (start, end) => {
                 const startTime = new Date(`1970-01-01T${start}:00`);
                 const endTime = new Date(`1970-01-01T${end}:00`);
-                if (endTime < startTime) { // Maneja el caso de pasar la medianoche
+                if (endTime < startTime) {
                     endTime.setDate(endTime.getDate() + 1);
                 }
-                const diff = endTime - startTime;
-                return diff / (1000 * 60 * 60);
+                return (endTime - startTime) / (1000 * 60 * 60);
             };
 
             const renderPasantias = () => {
-                pasantias.sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Ordenar por fecha
+                pasantias.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
                 pasantiasListContainer.innerHTML = '';
                 if (pasantias.length === 0) {
-                    pasantiasListContainer.innerHTML = `<div class="text-center text-slate-400 py-10">
-                        <i data-lucide="folder-search" class="w-16 h-16 mx-auto mb-4"></i>
-                        <p>Aún no has registrado ninguna pasantía.</p>
-                        <p>Usa el formulario de la izquierda para empezar.</p>
-                    </div>`;
+                    pasantiasListContainer.innerHTML = `<div class="text-center text-slate-400 py-10"><i data-lucide="folder-search" class="w-16 h-16 mx-auto mb-4"></i><p>Aún no has registrado ninguna pasantía.</p></div>`;
                     lucide.createIcons();
                     return;
                 }
-
                 pasantias.forEach((pasantia, index) => {
                     const horas = calculateHours(pasantia.horaEntrada, pasantia.horaSalida);
                     const card = document.createElement('div');
@@ -257,10 +232,7 @@
                                 <span class="font-semibold text-indigo-400"><i data-lucide="clock" class="w-3 h-3 inline-block mr-1"></i>${horas.toFixed(2)} horas</span>
                             </div>
                         </div>
-                        <button class="delete-btn text-slate-500 hover:text-red-400 transition-colors" data-index="${index}">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        </button>
-                    `;
+                        <button class="delete-btn text-slate-500 hover:text-red-400 transition-colors" data-index="${index}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>`;
                     pasantiasListContainer.appendChild(card);
                 });
                 lucide.createIcons();
@@ -268,10 +240,11 @@
             };
 
             const updateSummary = () => {
-                totalDias.textContent = pasantias.length;
-                const total = pasantias.reduce((acc, curr) => {
-                    return acc + calculateHours(curr.horaEntrada, curr.horaSalida);
-                }, 0);
+                // *** FIX: Count unique days ***
+                const uniqueDates = new Set(pasantias.map(p => p.fecha));
+                totalDias.textContent = uniqueDates.size;
+                
+                const total = pasantias.reduce((acc, curr) => acc + calculateHours(curr.horaEntrada, curr.horaSalida), 0);
                 totalHoras.textContent = total.toFixed(2);
             };
 
@@ -284,13 +257,10 @@
                     lugar: document.getElementById('lugar').value,
                     descripcion: document.getElementById('descripcion').value,
                 };
-                
-                const hours = calculateHours(newPasantia.horaEntrada, newPasantia.horaSalida);
-                if (hours <= 0) {
+                if (calculateHours(newPasantia.horaEntrada, newPasantia.horaSalida) <= 0) {
                     alert('La hora de salida debe ser posterior a la hora de entrada.');
                     return;
                 }
-
                 pasantias.push(newPasantia);
                 saveData();
                 renderPasantias();
@@ -308,58 +278,50 @@
                 }
             };
             
-            // --- Funciones de Excel (Importar/Exportar) ---
-
             const handleFileUpload = (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                         
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 10 });
-
                         document.getElementById('pasante').value = worksheet['C4'] ? worksheet['C4'].v : '';
                         document.getElementById('docente').value = worksheet['C5'] ? worksheet['C5'].v : '';
                         document.getElementById('carrera').value = worksheet['C6'] ? worksheet['C6'].v : '';
                         document.getElementById('semestre').value = worksheet['C7'] ? worksheet['C7'].v : '';
-
-                        const importedPasantias = jsonData
-                            .filter(row => row.length >= 6 && row[0] !== 'Fecha')
-                            .map(row => {
-                                const fechaExcel = typeof row[0] === 'number' ? new Date(Math.round((row[0] - 25569) * 86400 * 1000)).toISOString().split('T')[0] : row[0];
-                                
-                                const formatTime = (timeValue) => {
-                                    if (typeof timeValue === 'number') {
-                                        const totalSeconds = Math.round(timeValue * 86400);
-                                        const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-                                        const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-                                        return `${hours}:${minutes}`;
-                                    }
-                                    return timeValue;
-                                };
-
-                                return {
-                                    fecha: fechaExcel,
-                                    horaEntrada: formatTime(row[1]),
-                                    horaSalida: formatTime(row[2]),
-                                    lugar: row[3],
-                                    descripcion: row[4],
-                                };
-                            });
                         
+                        // *** FIX: More robust import logic ***
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        const startIndex = jsonData.findIndex(row => row[0] === 'Fecha');
+                        if (startIndex === -1) throw new Error("Formato de tabla no reconocido.");
+
+                        const importedPasantias = [];
+                        for (let i = startIndex + 1; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            if (!row[0] || row[0] === 'TOTAL DÍAS:') break; // Stop before summary
+
+                            const fecha = new Date(row[0]);
+                            const horaEntrada = new Date(row[1]);
+                            const horaSalida = new Date(row[2]);
+
+                            importedPasantias.push({
+                                fecha: fecha.toISOString().split('T')[0],
+                                horaEntrada: horaEntrada.toTimeString().substring(0, 5),
+                                horaSalida: horaSalida.toTimeString().substring(0, 5),
+                                lugar: row[3],
+                                descripcion: row[4],
+                            });
+                        }
                         pasantias = importedPasantias;
                         saveData();
                         renderPasantias();
                         showEditor();
                     } catch (error) {
                         console.error("Error al importar el archivo:", error);
-                        alert("Hubo un error al procesar el archivo. Asegúrate de que es un informe válido generado por esta aplicación.");
+                        alert("Hubo un error al procesar el archivo.");
                     } finally {
                         fileInput.value = '';
                     }
@@ -369,133 +331,118 @@
 
             const downloadReport = () => {
                 if (pasantias.length === 0) {
-                    alert('No hay pasantías registradas para generar un informe.');
+                    alert('No hay pasantías para generar un informe.');
                     return;
                 }
-                
                 saveData();
 
                 const wb = XLSX.utils.book_new();
-                
                 pasantias.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
                 const info = JSON.parse(localStorage.getItem('pasantiasUserInfo'));
-                const hoy = new Date().toLocaleDateString('es-ES');
-                const fechaInicio = new Date(pasantias[0].fecha + 'T00:00:00').toLocaleDateString('es-ES');
-                const fechaFin = new Date(pasantias[pasantias.length - 1].fecha + 'T00:00:00').toLocaleDateString('es-ES');
+                const hoy = new Date();
+                const fechaInicio = new Date(pasantias[0].fecha + 'T00:00:00');
+                const fechaFin = new Date(pasantias[pasantias.length - 1].fecha + 'T00:00:00');
                 
-                const totalDiasNum = pasantias.length;
+                const uniqueDates = new Set(pasantias.map(p => p.fecha));
+                const totalDiasNum = uniqueDates.size;
                 const totalHorasNum = pasantias.reduce((acc, p) => acc + calculateHours(p.horaEntrada, p.horaSalida), 0);
                 
                 const headerData = [
-                    ["INFORME DE PASANTÍAS"],
-                    [],
-                    ["Datos del Pasante"],
-                    ["Nombre:", "", info.pasante],
-                    ["Docente:", "", info.docente],
-                    ["Carrera:", "", info.carrera],
-                    ["Semestre:", "", info.semestre],
-                    [],
-                    ["Periodo:", `${fechaInicio} - ${fechaFin}`, "", "Fecha de Emisión:", hoy],
+                    ["INFORME DE PASANTÍAS"], [], ["Datos del Pasante"],
+                    ["Nombre:", "", info.pasante], ["Docente:", "", info.docente],
+                    ["Carrera:", "", info.carrera], ["Semestre:", "", info.semestre], [],
+                    ["Periodo:", fechaInicio, "", "Fecha de Emisión:", hoy],
                 ];
 
                 const tableHeader = ["Fecha", "Hora Entrada", "Hora Salida", "Lugar", "Descripción", "Horas del Día"];
                 
+                // *** FIX: Correct data mapping for export ***
                 const tableBody = pasantias.map(p => {
-                    const horasDia = calculateHours(p.horaEntrada, p.horaSalida);
+                    const entrada = new Date(`1970-01-01T${p.horaEntrada}`);
+                    const salida = new Date(`1970-01-01T${p.horaSalida}`);
                     return [
                         new Date(p.fecha + 'T00:00:00'),
-                        p.horaEntrada,
-                        p.horaSalida,
+                        entrada,
+                        salida,
                         p.lugar,
                         p.descripcion,
-                        horasDia
+                        calculateHours(p.horaEntrada, p.horaSalida) / 24 // Convert hours to Excel fraction of a day
                     ];
                 });
 
                 const summaryData = [
                     [],
                     ["", "", "", "", "TOTAL DÍAS:", totalDiasNum],
-                    ["", "", "", "", "TOTAL HORAS:", totalHorasNum]
+                    ["", "", "", "", "TOTAL HORAS:", totalHorasNum / 24] // Also as Excel fraction
                 ];
-
-                const ws_data = [
-                    ...headerData,
-                    [],
-                    tableHeader,
-                    ...tableBody,
-                    ...summaryData
-                ];
-
-                const ws = XLSX.utils.aoa_to_sheet(ws_data);
-
+                
+                const ws = XLSX.utils.aoa_to_sheet([]);
+                XLSX.utils.sheet_add_aoa(ws, headerData, { origin: 'A1' });
+                XLSX.utils.sheet_add_aoa(ws, [tableHeader], { origin: 'A11' });
+                XLSX.utils.sheet_add_json(ws, tableBody, { origin: 'A12', skipHeader: true });
+                XLSX.utils.sheet_add_aoa(ws, summaryData, { origin: `A${12 + tableBody.length}`});
+                 
+                ws['B9'].z = 'dd/mm/yyyy';
+                ws['E9'].z = 'dd/mm/yyyy';
+                
+                const tableEndRow = 11 + tableBody.length;
+                ws[`F${tableEndRow + 3}`].z = '[h]:mm'; // Format total hours correctly
+                
                 ws['!merges'] = [
-                    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
-                    { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
-                    { s: { r: 3, c: 2 }, e: { r: 3, c: 5 } },
-                    { s: { r: 4, c: 2 }, e: { r: 4, c: 5 } },
-                    { s: { r: 5, c: 2 }, e: { r: 5, c: 5 } },
-                    { s: { r: 6, c: 2 }, e: { r: 6, c: 5 } },
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
+                    { s: { r: 3, c: 2 }, e: { r: 3, c: 5 } }, { s: { r: 4, c: 2 }, e: { r: 4, c: 5 } },
+                    { s: { r: 5, c: 2 }, e: { r: 5, c: 5 } }, { s: { r: 6, c: 2 }, e: { r: 6, c: 5 } },
                 ];
+                ws['!cols'] = [ { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 50 }, { wch: 15 } ];
                 
-                ws['!cols'] = [
-                    { wch: 15 }, { wch: 15 }, { wch: 15 },
-                    { wch: 20 }, { wch: 50 }, { wch: 15 }
-                ];
-                
-                const headerStyle = { font: { bold: true, sz: 16, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FF4F46E5" } }, alignment: { horizontal: "center", vertical: "center" } };
+                const headerStyle = { font: { bold: true, sz: 16, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FF4F46E5" } }, alignment: { horizontal: "center" } };
                 const subHeaderStyle = { font: { bold: true, sz: 12 }, fill: { fgColor: { rgb: "FF374151" } } };
                 const tableHeaderStyle = { font: { bold: true, color: { rgb: "FFFFFFFF" } }, fill: { fgColor: { rgb: "FF6366F1" } }, alignment: { horizontal: "center" }, border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
                 const cellStyle = { border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } } };
                 const summaryLabelStyle = { font: { bold: true }, alignment: { horizontal: "right" } };
 
-                // FIX: Ensure cell objects exist before applying styles
-                const applyStyle = (cellRef, style) => {
-                    if (!ws[cellRef]) ws[cellRef] = {};
-                    ws[cellRef].s = style;
-                };
-                
-                const applyFormat = (cellRef, format) => {
-                    if (!ws[cellRef]) ws[cellRef] = {};
-                    ws[cellRef].z = format;
+                const applyRangeStyle = (range, style) => {
+                    for(let R = range.s.r; R <= range.e.r; ++R) {
+                        for(let C = range.s.c; C <= range.e.c; ++C) {
+                            const cell_address = {c:C, r:R};
+                            const cell_ref = XLSX.utils.encode_cell(cell_address);
+                            if(!ws[cell_ref]) ws[cell_ref] = {};
+                            ws[cell_ref].s = style;
+                        }
+                    }
                 };
 
-                applyStyle('A1', headerStyle);
-                applyStyle('A3', subHeaderStyle);
-                
-                tableHeader.forEach((_, i) => {
-                    applyStyle(XLSX.utils.encode_cell({c: i, r: 10}), tableHeaderStyle);
-                });
+                ws['A1'].s = headerStyle;
+                ws['A3'].s = subHeaderStyle;
+                applyRangeStyle({s:{r:10,c:0}, e:{r:10, c:5}}, tableHeaderStyle);
+                applyRangeStyle({s:{r:11,c:0}, e:{r:10 + tableBody.length, c:5}}, cellStyle);
 
-                tableBody.forEach((row, r_idx) => {
-                    row.forEach((_, c_idx) => {
-                        const cellRef = XLSX.utils.encode_cell({ c: c_idx, r: 11 + r_idx });
-                        applyStyle(cellRef, cellStyle);
-                        if (c_idx === 0) applyFormat(cellRef, 'dd/mm/yyyy');
-                        if (c_idx === 1 || c_idx === 2) applyFormat(cellRef, 'hh:mm');
-                        if (c_idx === 5) applyFormat(cellRef, '0.00');
-                    });
-                });
-                
-                const summaryRow1 = 11 + tableBody.length + 2;
-                const summaryRow2 = summaryRow1 + 1;
-                applyStyle(XLSX.utils.encode_cell({c:4, r:summaryRow1}), summaryLabelStyle);
-                applyStyle(XLSX.utils.encode_cell({c:4, r:summaryRow2}), summaryLabelStyle);
-                applyFormat(XLSX.utils.encode_cell({c:5, r:summaryRow2}), '0.00');
+                for (let i = 0; i < tableBody.length; i++) {
+                    const row = 11 + i;
+                    ws[`A${row}`].z = 'dd/mm/yyyy';
+                    ws[`B${row}`].z = 'hh:mm';
+                    ws[`C${row}`].z = 'hh:mm';
+                    ws[`F${row}`].z = '[h]:mm';
+                }
+
+                ws[`E${tableEndRow + 2}`].s = summaryLabelStyle;
+                ws[`E${tableEndRow + 3}`].s = summaryLabelStyle;
 
                 XLSX.utils.book_append_sheet(wb, ws, "Informe de Pasantías");
-                XLSX.writeFile(wb, `Informe_Pasantias_${info.pasante.replace(/\s/g, '_')}_${hoy}.xlsx`);
+                XLSX.writeFile(wb, `Informe_Pasantias_${info.pasante.replace(/\s/g, '_')}_${new Date().toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}).replace(/\//g,'-')}.xlsx`);
             };
 
-            // --- Event Listeners ---
             newReportBtn.addEventListener('click', () => {
-                pasantias = [];
-                localStorage.removeItem('pasantiasData');
-                renderPasantias();
-                showEditor();
+                if (confirm('¿Crear un nuevo informe? Se borrarán los datos actuales de la pantalla.')) {
+                    pasantias = [];
+                    localStorage.removeItem('pasantiasData');
+                    renderPasantias();
+                    showEditor();
+                }
             });
 
             backToHomeBtn.addEventListener('click', () => {
-                 if (confirm('¿Estás seguro de que quieres volver al inicio? Se borrarán los datos no guardados.')) {
+                 if (confirm('¿Volver al inicio? Se perderán los cambios no guardados.')) {
                     pasantias = [];
                     localStorage.clear();
                     showWelcome();
@@ -509,7 +456,6 @@
             fileInput.addEventListener('change', handleFileUpload);
             downloadReportBtn.addEventListener('click', downloadReport);
 
-            // Carga inicial
             loadData();
             renderPasantias();
         });
